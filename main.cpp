@@ -25,15 +25,20 @@ typedef struct {
 } Player;
 Player player;
 
+typedef struct {
+    int x, y, tileSize;
+} Box;
+Box box;
+
 int map[] = {
     1, 1, 1, 1, 1, 1, 1, 1,
-    1, 0, 0, 0, 0, 0, 3, 1,
+    1, 0, 0, 0, 0, 0, 2, 1,
     1, 0, 1, 1, 0, 1, 1, 1,
-    1, 0, 0, 2, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 1,
     1, 0, 0, 1, 0, 1, 1, 1,
     1, 0, 1, 0, 0, 1, 1, 1,
     1, 0, 0, 0, 0, 0, 0, 1,
-    1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1
 };
 
 void awake() {
@@ -60,10 +65,15 @@ void awake() {
     player.moveTime = 0.f;
     player.maxMoveTime = 1.5f;
 
+    //BOX
+    box.x = 4;
+    box.y = 4;
+
     //AUTO TILE SIZE
     int autoSize = game.screenWidth / level.width;
     level.tileSize = autoSize;
     player.tileSize = autoSize;
+    box.tileSize = autoSize;
 
 };
 
@@ -92,12 +102,8 @@ void drawMap() {
             if (tile == 1) {
                 glColor3f(1, 1, 1);
             }
-            //BOX
-            else if (tile == 2) {
-                glColor3f(1, 0, 1);
-            }
             //DESTINY
-            else if (tile == 3) {
+            else if (tile == 2) {
                 glColor3f(0, 1, 1);
             }
             //VOID
@@ -127,27 +133,26 @@ void drawPlayer() {
     glEnd();
 }
 
-int checkMapHasTileType(int tileType) {
-    int i;
-    for (i = 0; i < level.size; i++) {
-        if (map[i] == tileType) {
-            return 1;
-        }
-    }
-    return 0;
+void drawBox() {
+    glColor3f(1, 1, 0);
+    //COUNTERCLOCK
+    glBegin(GL_QUADS);
+    glVertex2i(box.x * box.tileSize, box.y * box.tileSize);
+    glVertex2i(box.x * box.tileSize, box.y * box.tileSize + box.tileSize);
+    glVertex2i(box.x * box.tileSize + box.tileSize, box.y * box.tileSize + box.tileSize);
+    glVertex2i(box.x * box.tileSize + box.tileSize, box.y * box.tileSize);
+    glEnd();
 }
 
 void moveBox(int currentX, int currentY, int x, int y) {
-    if (getTileType(x, y) == 0 || getTileType(x, y) == 3) {
+    if (getTileType(x, y) == 0) {
         setTileType(currentX, currentY, 0);
         setTileType(x, y, 2);
     }
 }
 
 void checkGameWin() {
-    if (!checkMapHasTileType(2)) {
-        glfwTerminate();
-    }
+    
 }
 
 void movePlayer() {
@@ -155,7 +160,7 @@ void movePlayer() {
         player.moveTime += 7 * game.deltaTime;
         if (player.moveTime >= player.maxMoveTime) {
             //VOID DESTINY
-            if (getTileType(player.x, player.y - 1) == 0 || getTileType(player.x, player.y - 1) == 3) {
+            if (getTileType(player.x, player.y - 1) == 0 || getTileType(player.x, player.y - 1) == 2) {
                 player.y--;
                 player.moveTime = 0.f;
             }
@@ -172,7 +177,7 @@ void movePlayer() {
         player.moveTime += 7 * game.deltaTime;
         if (player.moveTime >= player.maxMoveTime) {
             //VOID DESTINY
-            if (getTileType(player.x, player.y + 1) == 0 || getTileType(player.x, player.y + 1) == 3) {
+            if (getTileType(player.x, player.y + 1) == 0 || getTileType(player.x, player.y + 1) == 2) {
                 player.y++;
                 player.moveTime = 0.f;
             }
@@ -189,7 +194,7 @@ void movePlayer() {
         player.moveTime += 7 * game.deltaTime;
         if (player.moveTime >= player.maxMoveTime) {
             //VOID DESTINY
-            if (getTileType(player.x - 1, player.y) == 0 || getTileType(player.x - 1, player.y) == 3) {
+            if (getTileType(player.x - 1, player.y) == 0 || getTileType(player.x - 1, player.y) == 2) {
                 player.x--;
                 player.moveTime = 0.f;
             }
@@ -206,7 +211,7 @@ void movePlayer() {
         player.moveTime += 7 * game.deltaTime;
         if (player.moveTime >= player.maxMoveTime) {
             //VOID DESTINY
-            if (getTileType(player.x + 1, player.y) == 0 || getTileType(player.x + 1, player.y) == 3) {
+            if (getTileType(player.x + 1, player.y) == 0 || getTileType(player.x + 1, player.y) == 2) {
                 player.x++;
                 player.moveTime = 0.f;
             }
@@ -227,6 +232,8 @@ void movePlayer() {
 void update() {
     //MAP
     drawMap();
+    //BOX
+    drawBox();
     //PLAYER
     drawPlayer();
     movePlayer();
