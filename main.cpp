@@ -21,6 +21,7 @@ Level level;
 
 typedef struct {
     int x, y, size;
+    float moveTime, maxMoveTime;
 } Player;
 Player player;
 
@@ -42,6 +43,9 @@ void awake() {
     //GAME
     game.screenWidth = 960;
     game.screenHeight = 960;
+    game.currentFrame = 0.f;
+    game.lastFrame = 0.f;
+    game.deltaTime = 0.f;
     
     //LEVEL
     level.tileSize = 120;
@@ -53,6 +57,9 @@ void awake() {
     player.x = 1;
     player.y = 1;
     player.size = 120;
+    player.moveTime = 0.f;
+    player.maxMoveTime = 1.5f;
+
 };
 
 void initialize(GLFWwindow* window) {
@@ -61,12 +68,16 @@ void initialize(GLFWwindow* window) {
     glOrtho(0.0f, game.screenWidth, game.screenHeight, 0.0f, 0.0f, 1.0f);
 }
 
+int getTileType(int x, int y) {
+    return map[y * level.width + x];
+}
+
 void drawMap() {
     int x, y;
     for (x = 0; x < level.width; x++) {
         for (y = 0; y < level.height; y++) {
             //COLORS
-            int tile = map[y * level.width + x];
+            int tile = getTileType(x, y);
             
             //WALL
             if (tile == 1) {
@@ -107,18 +118,53 @@ void drawPlayer() {
     glEnd();
 }
 
+int checkAvaiableSpace(int up, int down, int left, int right) {
+    int checkX = player.x;
+    int checkY = player.y;
+    
+    if (up) checkY--;
+    else if (down) checkY++;
+    else if (left) checkX--;
+    else if (right) checkX++;
+
+    if (getTileType(checkX, checkY) == 0 || getTileType(checkX, checkY) == 3) {
+        return 1;
+    }
+    
+    return 0;
+}
+
 void movePlayer() {
     if (input.up) {
-        player.y -= 1;
+        player.moveTime += 7 * game.deltaTime;
+        if (player.moveTime >= player.maxMoveTime && checkAvaiableSpace(1, 0, 0, 0)) {
+            player.y--;
+            player.moveTime = 0.f;
+        }
     }
-    if (input.down) {
-        player.y += 1;
+    else if (input.down) {
+        player.moveTime += 7 * game.deltaTime;
+        if (player.moveTime >= player.maxMoveTime && checkAvaiableSpace(0, 1, 0, 0)) {
+            player.y++;
+            player.moveTime = 0.f;
+        }
     }
-    if (input.left) {
-        player.x -= 1;
+    else if (input.left) {
+        player.moveTime += 7 * game.deltaTime;
+        if (player.moveTime >= player.maxMoveTime && checkAvaiableSpace(0, 0, 1, 0)) {
+            player.x--;
+            player.moveTime = 0.f;
+        }
     }
-    if (input.right) {
-        player.x += 1;
+    else if (input.right) {
+        player.moveTime += 7 * game.deltaTime;
+        if (player.moveTime >= player.maxMoveTime && checkAvaiableSpace(0, 0, 0, 1)) {
+            player.x++;
+            player.moveTime = 0.f;
+        }
+    }
+    else {
+        player.moveTime = player.maxMoveTime;
     }
 }
 
@@ -199,7 +245,7 @@ int main(void)
         glfwPollEvents();
 
         //User Inputs
-        glfwSetKeyCallback(window, key_callback);
+        glfwSetKeyCallback(window, key_callback);        
     }
 
     glfwTerminate();
