@@ -20,7 +20,7 @@ typedef struct {
 Level level;
 
 typedef struct {
-    int x, y, size;
+    int x, y, tileSize;
     float moveTime, maxMoveTime;
 } Player;
 Player player;
@@ -48,7 +48,7 @@ void awake() {
     game.deltaTime = 0.f;
     
     //LEVEL
-    level.tileSize = 60;
+    //level.tileSize = 60;
     level.size = sizeof(map) / sizeof(int);
     level.width = sqrt(level.size);
     level.height = sqrt(level.size);
@@ -56,9 +56,14 @@ void awake() {
     //PLAYER
     player.x = 6;
     player.y = 6;
-    player.size = 60;
+    //player.size = 60;
     player.moveTime = 0.f;
     player.maxMoveTime = 1.5f;
+
+    //AUTO TILE SIZE
+    int autoSize = game.screenWidth / level.width;
+    level.tileSize = autoSize;
+    player.tileSize = autoSize;
 
 };
 
@@ -115,17 +120,33 @@ void drawPlayer() {
     glColor3f(0, 0, 1);
     //COUNTERCLOCK
     glBegin(GL_QUADS);
-    glVertex2i(player.x * player.size, player.y * player.size);
-    glVertex2i(player.x * player.size, player.y * player.size + player.size);
-    glVertex2i(player.x * player.size + player.size, player.y * player.size + player.size);
-    glVertex2i(player.x * player.size + player.size, player.y * player.size);
+    glVertex2i(player.x * player.tileSize, player.y * player.tileSize);
+    glVertex2i(player.x * player.tileSize, player.y * player.tileSize + player.tileSize);
+    glVertex2i(player.x * player.tileSize + player.tileSize, player.y * player.tileSize + player.tileSize);
+    glVertex2i(player.x * player.tileSize + player.tileSize, player.y * player.tileSize);
     glEnd();
+}
+
+int checkMapHasTileType(int tileType) {
+    int i;
+    for (i = 0; i < level.size; i++) {
+        if (map[i] == tileType) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 void moveBox(int currentX, int currentY, int x, int y) {
     if (getTileType(x, y) == 0 || getTileType(x, y) == 3) {
         setTileType(currentX, currentY, 0);
         setTileType(x, y, 2);
+    }
+}
+
+void checkGameWin() {
+    if (!checkMapHasTileType(2)) {
+        glfwTerminate();
     }
 }
 
@@ -142,6 +163,9 @@ void movePlayer() {
             else if (getTileType(player.x, player.y - 1) == 2) {
                 moveBox(player.x, player.y - 1, player.x, player.y - 2);
             }
+
+            //CHECK IF AFTER MOVE PLAYER HAS WON
+            checkGameWin();
         }
     }
     else if (input.down) {
@@ -156,6 +180,9 @@ void movePlayer() {
             else if (getTileType(player.x, player.y + 1) == 2) {
                 moveBox(player.x, player.y + 1, player.x, player.y + 2);
             }
+
+            //CHECK IF AFTER MOVE PLAYER HAS WON
+            checkGameWin();
         }
     }
     else if (input.left) {
@@ -170,6 +197,9 @@ void movePlayer() {
             else if (getTileType(player.x - 1, player.y) == 2) {
                 moveBox(player.x - 1, player.y, player.x - 2, player.y);
             }
+
+            //CHECK IF AFTER MOVE PLAYER HAS WON
+            checkGameWin();
         }
     }
     else if (input.right) {
@@ -184,6 +214,9 @@ void movePlayer() {
             else if (getTileType(player.x + 1, player.y) == 2) {
                 moveBox(player.x + 1, player.y, player.x + 2, player.y);
             }
+
+            //CHECK IF AFTER MOVE PLAYER HAS WON
+            checkGameWin();
         }
     }
     else {
