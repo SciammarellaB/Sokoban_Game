@@ -27,11 +27,11 @@ Player player;
 
 int map[] = {
     1, 1, 1, 1, 1, 1, 1, 1,
-    1, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 3, 1,
+    1, 0, 1, 1, 0, 1, 1, 1,
     1, 0, 0, 2, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 3, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 1, 0, 1, 1, 1,
+    1, 0, 1, 0, 0, 1, 1, 1,
     1, 0, 0, 0, 0, 0, 0, 1,
     1, 1, 1, 1, 1, 1, 1, 1,
 };
@@ -41,22 +41,22 @@ void awake() {
     glfwWindowHint(GLFW_RESIZABLE, 0);
 
     //GAME
-    game.screenWidth = 960;
-    game.screenHeight = 960;
+    game.screenWidth = 480;
+    game.screenHeight = 480;
     game.currentFrame = 0.f;
     game.lastFrame = 0.f;
     game.deltaTime = 0.f;
     
     //LEVEL
-    level.tileSize = 120;
+    level.tileSize = 60;
     level.size = sizeof(map) / sizeof(int);
     level.width = sqrt(level.size);
     level.height = sqrt(level.size);
     
     //PLAYER
-    player.x = 1;
-    player.y = 1;
-    player.size = 120;
+    player.x = 6;
+    player.y = 6;
+    player.size = 60;
     player.moveTime = 0.f;
     player.maxMoveTime = 1.5f;
 
@@ -70,6 +70,10 @@ void initialize(GLFWwindow* window) {
 
 int getTileType(int x, int y) {
     return map[y * level.width + x];
+}
+
+void setTileType(int x, int y, int type) {
+    map[y * level.width + x] = type;
 }
 
 void drawMap() {
@@ -118,49 +122,68 @@ void drawPlayer() {
     glEnd();
 }
 
-int checkAvaiableSpace(int up, int down, int left, int right) {
-    int checkX = player.x;
-    int checkY = player.y;
-    
-    if (up) checkY--;
-    else if (down) checkY++;
-    else if (left) checkX--;
-    else if (right) checkX++;
-
-    if (getTileType(checkX, checkY) == 0 || getTileType(checkX, checkY) == 3) {
-        return 1;
+void moveBox(int currentX, int currentY, int x, int y) {
+    if (getTileType(x, y) == 0 || getTileType(x, y) == 3) {
+        setTileType(currentX, currentY, 0);
+        setTileType(x, y, 2);
     }
-    
-    return 0;
 }
 
 void movePlayer() {
     if (input.up) {
         player.moveTime += 7 * game.deltaTime;
-        if (player.moveTime >= player.maxMoveTime && checkAvaiableSpace(1, 0, 0, 0)) {
-            player.y--;
-            player.moveTime = 0.f;
+        if (player.moveTime >= player.maxMoveTime) {
+            //VOID DESTINY
+            if (getTileType(player.x, player.y - 1) == 0 || getTileType(player.x, player.y - 1) == 3) {
+                player.y--;
+                player.moveTime = 0.f;
+            }
+            //BOX
+            else if (getTileType(player.x, player.y - 1) == 2) {
+                moveBox(player.x, player.y - 1, player.x, player.y - 2);
+            }
         }
     }
     else if (input.down) {
         player.moveTime += 7 * game.deltaTime;
-        if (player.moveTime >= player.maxMoveTime && checkAvaiableSpace(0, 1, 0, 0)) {
-            player.y++;
-            player.moveTime = 0.f;
+        if (player.moveTime >= player.maxMoveTime) {
+            //VOID DESTINY
+            if (getTileType(player.x, player.y + 1) == 0 || getTileType(player.x, player.y + 1) == 3) {
+                player.y++;
+                player.moveTime = 0.f;
+            }
+            //BOX
+            else if (getTileType(player.x, player.y + 1) == 2) {
+                moveBox(player.x, player.y + 1, player.x, player.y + 2);
+            }
         }
     }
     else if (input.left) {
         player.moveTime += 7 * game.deltaTime;
-        if (player.moveTime >= player.maxMoveTime && checkAvaiableSpace(0, 0, 1, 0)) {
-            player.x--;
-            player.moveTime = 0.f;
+        if (player.moveTime >= player.maxMoveTime) {
+            //VOID DESTINY
+            if (getTileType(player.x - 1, player.y) == 0 || getTileType(player.x - 1, player.y) == 3) {
+                player.x--;
+                player.moveTime = 0.f;
+            }
+            //BOX
+            else if (getTileType(player.x - 1, player.y) == 2) {
+                moveBox(player.x - 1, player.y, player.x - 2, player.y);
+            }
         }
     }
     else if (input.right) {
         player.moveTime += 7 * game.deltaTime;
-        if (player.moveTime >= player.maxMoveTime && checkAvaiableSpace(0, 0, 0, 1)) {
-            player.x++;
-            player.moveTime = 0.f;
+        if (player.moveTime >= player.maxMoveTime) {
+            //VOID DESTINY
+            if (getTileType(player.x + 1, player.y) == 0 || getTileType(player.x + 1, player.y) == 3) {
+                player.x++;
+                player.moveTime = 0.f;
+            }
+            //BOX
+            else if (getTileType(player.x + 1, player.y) == 2) {
+                moveBox(player.x + 1, player.y, player.x + 2, player.y);
+            }
         }
     }
     else {
