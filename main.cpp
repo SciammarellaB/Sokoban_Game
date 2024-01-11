@@ -33,10 +33,10 @@ Box box;
 int map[] = {
     1, 1, 1, 1, 1, 1, 1, 1,
     1, 0, 0, 0, 0, 0, 2, 1,
-    1, 0, 1, 1, 0, 1, 1, 1,
     1, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 1, 0, 1, 1, 1,
-    1, 0, 1, 0, 0, 1, 1, 1,
+    1, 0, 1, 0, 1, 0, 0, 1,
+    1, 0, 0, 0, 1, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 1,
     1, 0, 0, 0, 0, 0, 0, 1,
     1, 1, 1, 1, 1, 1, 1, 1
 };
@@ -66,8 +66,8 @@ void awake() {
     player.maxMoveTime = 1.5f;
 
     //BOX
-    box.x = 4;
-    box.y = 4;
+    box.x = 3;
+    box.y = 3;
 
     //AUTO TILE SIZE
     int autoSize = game.screenWidth / level.width;
@@ -144,10 +144,19 @@ void drawBox() {
     glEnd();
 }
 
-void moveBox(int currentX, int currentY, int x, int y) {
-    if (getTileType(x, y) == 0) {
-        setTileType(currentX, currentY, 0);
-        setTileType(x, y, 2);
+//RECEIVE DE BOUNDING OF OBJECT AND CHECK IF IT WILL INTERSECT WITH IT
+int boxAABB(int x, int y) {
+    if(box.x == x && box.y == y)
+        return 1;
+    return 0;
+}
+
+void moveBox(int x, int y) {
+    int xo = box.x + x;
+    int yo = box.y + y;
+    if (getTileType(xo, yo) == 0) {
+        box.x = xo;
+        box.y = yo;
     }
 }
 
@@ -161,12 +170,13 @@ void movePlayer() {
         if (player.moveTime >= player.maxMoveTime) {
             //VOID DESTINY
             if (getTileType(player.x, player.y - 1) == 0 || getTileType(player.x, player.y - 1) == 2) {
-                player.y--;
-                player.moveTime = 0.f;
-            }
-            //BOX
-            else if (getTileType(player.x, player.y - 1) == 2) {
-                moveBox(player.x, player.y - 1, player.x, player.y - 2);
+                if (boxAABB(player.x, player.y - 1)) {
+                    moveBox(0, -1);
+                }
+                else {
+                    player.y--;
+                    player.moveTime = 0.f;
+                }
             }
 
             //CHECK IF AFTER MOVE PLAYER HAS WON
@@ -178,12 +188,13 @@ void movePlayer() {
         if (player.moveTime >= player.maxMoveTime) {
             //VOID DESTINY
             if (getTileType(player.x, player.y + 1) == 0 || getTileType(player.x, player.y + 1) == 2) {
-                player.y++;
-                player.moveTime = 0.f;
-            }
-            //BOX
-            else if (getTileType(player.x, player.y + 1) == 2) {
-                moveBox(player.x, player.y + 1, player.x, player.y + 2);
+                if (boxAABB(player.x, player.y + 1)) {
+                    moveBox(0, 1);
+                }
+                else {
+                    player.y++;
+                    player.moveTime = 0.f;
+                }
             }
 
             //CHECK IF AFTER MOVE PLAYER HAS WON
@@ -195,12 +206,13 @@ void movePlayer() {
         if (player.moveTime >= player.maxMoveTime) {
             //VOID DESTINY
             if (getTileType(player.x - 1, player.y) == 0 || getTileType(player.x - 1, player.y) == 2) {
-                player.x--;
-                player.moveTime = 0.f;
-            }
-            //BOX
-            else if (getTileType(player.x - 1, player.y) == 2) {
-                moveBox(player.x - 1, player.y, player.x - 2, player.y);
+                if (boxAABB(player.x - 1, player.y)) {
+                    moveBox(-1, 0);
+                }
+                else {
+                    player.x--;
+                    player.moveTime = 0.f;
+                }
             }
 
             //CHECK IF AFTER MOVE PLAYER HAS WON
@@ -212,12 +224,13 @@ void movePlayer() {
         if (player.moveTime >= player.maxMoveTime) {
             //VOID DESTINY
             if (getTileType(player.x + 1, player.y) == 0 || getTileType(player.x + 1, player.y) == 2) {
-                player.x++;
-                player.moveTime = 0.f;
-            }
-            //BOX
-            else if (getTileType(player.x + 1, player.y) == 2) {
-                moveBox(player.x + 1, player.y, player.x + 2, player.y);
+                if (boxAABB(player.x + 1, player.y)) {
+                    moveBox(1, 0);
+                }
+                else {
+                    player.x++;
+                    player.moveTime = 0.f;
+                }
             }
 
             //CHECK IF AFTER MOVE PLAYER HAS WON
