@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <math.h>
 
+typedef struct {
+    int value1, value2;
+} Tuple;
+
 typedef struct game {
     int screenWidth, screenHeight;
     double currentFrame, lastFrame, deltaTime;
@@ -40,6 +44,11 @@ int map[] = {
     1, 0, 0, 0, 0, 0, 0, 1,
     1, 1, 1, 1, 1, 1, 1, 1
 };
+
+void closeApplication() {
+    glfwTerminate();
+    exit(-1);
+}
 
 void awake() {
     //APPLICATION
@@ -89,6 +98,23 @@ int getTileType(int x, int y) {
 
 void setTileType(int x, int y, int type) {
     map[y * level.width + x] = type;
+}
+
+Tuple getFirstTileCoordinatesByType(int type) {
+    Tuple tuple;
+    tuple.value1 = -1;
+    tuple.value2 = -1;
+    int x, y;
+    for (x = 0; x < level.width; x++) {
+        for (y = 0; y < level.height; y++) {
+            if (getTileType(x, y) == 2) {
+                tuple.value1 = x;
+                tuple.value2 = y;
+                return tuple;
+            }
+        }
+    }
+    return tuple;
 }
 
 void drawMap() {
@@ -154,14 +180,17 @@ int boxAABB(int x, int y) {
 void moveBox(int x, int y) {
     int xo = box.x + x;
     int yo = box.y + y;
-    if (getTileType(xo, yo) == 0) {
+    if (getTileType(xo, yo) == 0 || getTileType(xo, yo) == 2) {
         box.x = xo;
         box.y = yo;
     }
 }
 
 void checkGameWin() {
-    
+    Tuple tuple = getFirstTileCoordinatesByType(2);
+    if (tuple.value1 == box.x && tuple.value2 == box.y){
+        closeApplication();
+    }
 }
 
 void movePlayer() {
@@ -172,15 +201,15 @@ void movePlayer() {
             if (getTileType(player.x, player.y - 1) == 0 || getTileType(player.x, player.y - 1) == 2) {
                 if (boxAABB(player.x, player.y - 1)) {
                     moveBox(0, -1);
+
+                    //CHECK IF AFTER MOVE PLAYER HAS WON
+                    checkGameWin();
                 }
                 else {
                     player.y--;
                     player.moveTime = 0.f;
                 }
             }
-
-            //CHECK IF AFTER MOVE PLAYER HAS WON
-            checkGameWin();
         }
     }
     else if (input.down) {
@@ -190,15 +219,15 @@ void movePlayer() {
             if (getTileType(player.x, player.y + 1) == 0 || getTileType(player.x, player.y + 1) == 2) {
                 if (boxAABB(player.x, player.y + 1)) {
                     moveBox(0, 1);
+
+                    //CHECK IF AFTER MOVE PLAYER HAS WON
+                    checkGameWin();
                 }
                 else {
                     player.y++;
                     player.moveTime = 0.f;
                 }
             }
-
-            //CHECK IF AFTER MOVE PLAYER HAS WON
-            checkGameWin();
         }
     }
     else if (input.left) {
@@ -208,15 +237,15 @@ void movePlayer() {
             if (getTileType(player.x - 1, player.y) == 0 || getTileType(player.x - 1, player.y) == 2) {
                 if (boxAABB(player.x - 1, player.y)) {
                     moveBox(-1, 0);
+
+                    //CHECK IF AFTER MOVE PLAYER HAS WON
+                    checkGameWin();
                 }
                 else {
                     player.x--;
                     player.moveTime = 0.f;
                 }
             }
-
-            //CHECK IF AFTER MOVE PLAYER HAS WON
-            checkGameWin();
         }
     }
     else if (input.right) {
@@ -226,15 +255,15 @@ void movePlayer() {
             if (getTileType(player.x + 1, player.y) == 0 || getTileType(player.x + 1, player.y) == 2) {
                 if (boxAABB(player.x + 1, player.y)) {
                     moveBox(1, 0);
+
+                    //CHECK IF AFTER MOVE PLAYER HAS WON
+                    checkGameWin();
                 }
                 else {
                     player.x++;
                     player.moveTime = 0.f;
                 }
             }
-
-            //CHECK IF AFTER MOVE PLAYER HAS WON
-            checkGameWin();
         }
     }
     else {
@@ -276,7 +305,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
 }
 
-int main(void)
+int main()
 {
     GLFWwindow* window;
 
@@ -291,7 +320,7 @@ int main(void)
     window = glfwCreateWindow(game.screenWidth, game.screenHeight, "Sokoban", NULL, NULL);
     if (!window)
     {
-        glfwTerminate();
+        closeApplication();
         return -1;
     }
 
