@@ -1,7 +1,11 @@
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 typedef struct {
     int value1, value2;
@@ -50,6 +54,32 @@ void closeApplication() {
     exit(-1);
 }
 
+void loadTexture() {
+    
+    int width, height, nrChannels;
+    stbi_set_flip_vertically_on_load(GL_TRUE);
+    unsigned char* img_data = stbi_load("MapTexture.png", &width, &height, &nrChannels, 0);
+
+    if (!img_data) {
+        printf("ERROR LOADING IMAGE! \n");
+        closeApplication();
+    }
+
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    if(img_data)
+        stbi_image_free(img_data);
+}
+
 void awake() {
     //APPLICATION
     glfwWindowHint(GLFW_RESIZABLE, 0);
@@ -90,6 +120,7 @@ void initialize(GLFWwindow* window) {
     glfwGetFramebufferSize(window, &game.screenWidth, &game.screenHeight);
     glViewport(0, 0, game.screenWidth, game.screenHeight);
     glOrtho(0.0f, game.screenWidth, game.screenHeight, 0.0f, 0.0f, 1.0f);
+    loadTexture();
 }
 
 int getTileType(int x, int y) {
@@ -107,7 +138,7 @@ Tuple getFirstTileCoordinatesByType(int type) {
     int x, y;
     for (x = 0; x < level.width; x++) {
         for (y = 0; y < level.height; y++) {
-            if (getTileType(x, y) == 2) {
+            if (getTileType(x, y) == type) {
                 tuple.value1 = x;
                 tuple.value2 = y;
                 return tuple;
@@ -327,8 +358,14 @@ int main()
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
+    if (glewInit() != GLEW_OK)
+        return -1;
+
     //INIT DEFAULT VALUES BEFORE WINDOW
     initialize(window);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
